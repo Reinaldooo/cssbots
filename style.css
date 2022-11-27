@@ -1,0 +1,52 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+min-height: 100vh;
+    background: black;
+    font-family: 'Press Start 2P', cursive;
+    overflow: hidden;
+}
+
+#canvas1 {
+    width: 512px;
+    height: 256px;
+    transform: scale(3.5) translate(0,0);
+    image-rendering: pixelated;
+    transition: all 1s;
+    border-radius: 5px;
+}
+
+#canvas2 {
+    background: transparent;
+    width: 100vw;
+    height: 100vh;
+    image-rendering: pixelated;
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+@media (max-width: 600px)
+{
+    #canvas1 {        
+        transform: scale(1);
+    }
+}
+
+@media (max-width: 1400px)
+{
+    #canvas1 {        
+        transform: scale(2);
+    }
+}
+
+img {
+    display: none;
+}
