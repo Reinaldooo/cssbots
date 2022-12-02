@@ -1,3 +1,5 @@
+import { milestones } from "./milestones.js";
+
 export default class InputHandler {
   constructor(game) {
     this.game = game;
@@ -32,11 +34,16 @@ export default class InputHandler {
       else if ((e.key === "e" || e.key === "E") && this.game.milestoneScreen) {
         this.game.handlePause();
         this.game.milestoneScreen = false;
-        this.game.currMilestone = this.game.milestones[this.game.currMilestone.idx + 1];
+        this.game.currMilestone = milestones[this.game.currMilestone.idx + 1];
+        this.game.confirmAudio.play()
       }
       else if ((e.key === "s" || e.key === "S") && this.game.inverted) {
         this.game.inverted = false;
         this.game.clearEnemies(true);
+      }
+      else if ((e.key === "r" || e.key === "R") && this.game.enemiesKilled >= 200) {
+        localStorage.removeItem("savegame")
+        location.reload();
       }
       else if (e.key === "Escape") this.game.handlePause();
     });

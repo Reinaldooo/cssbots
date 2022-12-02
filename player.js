@@ -20,7 +20,8 @@ export default class Player {
     this.atk1Audio = new Audio("assets/sfx/atk1.wav");
     this.atk2Audio = new Audio("assets/sfx/atk2.wav");
     this.jumpAudio = new Audio("assets/sfx/jump.wav");
-    this.collisionAudio = new Audio("assets/sfx/robotDeath.wav");
+    this.collisionAudio = new Audio("assets/sfx/boom.wav");
+    this.collisionAudio.volume = .5;
     this.frameX = 0;
     this.maxFrame = 4;
     this.frameY = 0;

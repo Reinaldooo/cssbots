@@ -8,7 +8,7 @@ class Layer {
     this.x = 0;
     this.y = 0;
     this.enemiesToColor = enemiesToColor;
-    this.milestoneOfsset = 60;
+    this.milestoneOfsset = this.game.currMilestone.idx < 2 ? 60 : 0;
     this.lastNumEnemiesOffset = 31;
   }
   update() {

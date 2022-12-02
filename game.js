@@ -2,25 +2,30 @@ import InputHandler from "./input.js";
 import Player from "./player.js";
 import { Background, Foreground } from "./background.js";
 import { FlyingEnemy, FlyingEnemyTop, GroundEnemy } from "./enemies.js";
+import { milestones } from "./milestones.js";
 import { rand } from "./utils.js";
 
 export default class Game {
   constructor(canvas, animateFn) {
+    this.savegame = JSON.parse(localStorage.getItem("savegame")) || {};
     this.canvas = canvas;
     this.animateFn = animateFn;
     this.width = canvas.width;
     this.height = canvas.height;
     this.groundMargin = 15;
+    this.currMilestone = milestones[this.savegame.currMilestoneIdx || 0];
+    this.milestoneScreen = false;
     this.player = new Player(this);
     this.background = new Background(this);
     this.foreground = new Foreground(this);
     this.input = new InputHandler(this);
+    this.confirmAudio = new Audio("assets/sfx/confirm.wav");
     this.music1 = new Audio("assets/music/music1.wav");
     this.music2 = new Audio("assets/music/music2.wav");
     this.music = this.music1;
-    // this.music.play();
+    this.music.play();
     this.speed = 0;
-    this.maxSpeed = 0.5;
+    this.maxSpeed = this.savegame.maxSpeed || .5;
     this.enemies = [];
     this.collisions = [];
     this.enemyTimer = 0;
@@ -31,114 +36,13 @@ export default class Game {
     );
     this.pause = false;
     // this.debug = false;
-    this.level = 1;
-    this.enemiesKilled = 0;
+    this.level = this.savegame.level || 1;
+    this.enemiesKilled = this.savegame.enemiesKilled || 0;
     // Avoid speeding up if the number is the same
     this.enemiesKilledSinceLastUpdate = 0;
     this.enemiesModNumber = 5;
     this.canApplyFilters = false;
-    this.inverted = false;
-    this.milestones = [
-      {
-        idx: 0,
-        text: [
-          "Olá, nosso mundo anda meio caótico desde que o Elon Musk",
-          "alterou a nossa simulação, mas descobrimos que ela foi criada",
-          "utilizando HTML, CSS e Javascript. Nosso papel hoje é",
-          "destruir bots defeituosos e tentar consertar parte do CSS.",
-          " ",
-          "O CSS é responsável pela parte visual do mundo, e um dos seus",
-          "principais usos é na posição das coisas. Como você pode",
-          "ver, tudo está bagunçado. Vamos matar alguns inimigos e",
-          "tentar restaurar a ordem. Quanto mais inimigos matarmos,",
-          "mais partes do mundo voltarão para suas posições corretas.",
-          " ",
-          "Use as setas do teclado para se movimentar,",
-          "espaço para atacar e Esc para pausar.",
-          " ",
-          "Pressione 'E' para começar"
-        ],
-        font: "25px 'Press Start 2P'",
-        textAlign: "center",
-        fillStyle: "white",
-        enemyQty: 0,
-        posY: 200,
-        posX: window.innerWidth / 2
-      },
-      {
-        idx: 1,
-        text: [
-          "Boa, você restaurou as leis da física!",
-          "",
-          "Mas como você pode perceber, algumas coisas continuam em preto e branco!",
-          "",
-          "O CSS pode nos ajudar com isso, setando cores em cada um dos elementos.",
-          "Continue eliminando os bots para restaurar as cores do mundo.",
-          "",
-          "Não sei se você reparou, mas a simulação fica mais rápida conforme",
-          "matamos mais inimigos, tome cuidado com isso.",
-          "",
-          "",
-          "Pressione 'E' para continuar"
-        ],
-        font: "20px 'Press Start 2P'",
-        textAlign: "center",
-        fillStyle: "white",
-        enemyQty: 45,
-        posY: window.innerHeight / 2 - 200,
-        posX: window.innerWidth / 2
-      },
-      {
-        idx: 2,
-        text: [
-          "Perfeito, cores recuperadas!",
-          "",
-          "Além das cores, o CSS permite aplicar filtros, como borrado ou invertido!",
-          "Caso apareça algum inimigo diferente, mate-o e terá uma supresa.",
-          "",
-          "Para sair do modo especial, pressione 'S'.",
-          "",
-          "",
-          "Pressione 'E' para continuar"
-        ],
-        font: "20px 'Press Start 2P'",
-        textAlign: "center",
-        fillStyle: "white",
-        enemyQty: 130,
-        posY: window.innerHeight / 2 -150,
-        posX: window.innerWidth / 2
-      },
-      {
-        idx: 3,
-        text: [
-          "Parabéns, você conseguiu recuperar boa parte do mundo!",
-          "Ainda precisamos resolver algumas coisas usando Javascript,",
-          "mas pode ser outro dia.",
-          "",
-          "Você pode continuar jogando ou atualizar o navegador para recomeçar.",
-        ],
-        font: "20px 'Press Start 2P'",
-        textAlign: "center",
-        fillStyle: "white",
-        enemyQty: 200,
-        posY: window.innerHeight / 2 - 50,
-        posX: window.innerWidth / 2
-      },
-      {
-        idx: 4,
-        text: [
-          "Endgame",
-        ],
-        font: "20px 'Press Start 2P'",
-        textAlign: "center",
-        fillStyle: "white",
-        enemyQty: 200000,
-        posY: window.innerHeight / 2 - 50,
-        posX: window.innerWidth / 2
-      },
-    ];
-    this.currMilestone = this.milestones[0];
-    this.milestoneScreen = false;
+    this.inverted = false;    
   }
   update(input, deltaTime) {
     if(this.currMilestone.idx <= 1 && this.enemiesKilled <= 24 && this.enemiesKilled % 2 === 0) {
@@ -156,7 +60,7 @@ export default class Game {
       this.enemiesKilledSinceLastUpdate % this.enemiesModNumber === 0
     ) {
       this.level++;
-      this.maxSpeed += 0.21; // 1 to avoid nums like 2.5 as i use mod % on player fps
+      this.maxSpeed += 0.2; // 1 to avoid nums like 2.5 as i use mod % on player fps
       this.enemiesModNumber += 3;
       this.enemiesKilledSinceLastUpdate = 0;
     }
@@ -206,10 +110,19 @@ export default class Game {
       if(this.currMilestone.idx === 1) {
         this.canvas.style.transform = `scale(3.5)`;
       }
+      if(this.currMilestone.idx > 0) {
+        localStorage.setItem("savegame", JSON.stringify({
+          level: this.level,
+          maxSpeed: this.maxSpeed,
+          enemiesKilled: this.enemiesKilled,
+          currMilestoneIdx: this.currMilestone.idx + 1
+        }));
+      }
       this.milestoneScreen = true;
       this.handlePause();
       this.showOverlay(ctx);
       this.showMilestoneText(ctx2, this.currMilestone);
+      
     }
   }
   addEnemy() {
@@ -237,9 +150,9 @@ export default class Game {
   }
   handlePause() {
     this.pause = !this.pause;
-    // this.music.pause();
+    this.music.pause();
     if (!this.pause) {
-      // this.music.play();
+      this.music.play();
       requestAnimationFrame(this.animateFn);
     }
   }
